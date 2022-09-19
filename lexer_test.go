@@ -153,7 +153,7 @@ func TestLexer(t *testing.T) {
 			s := ybase.NewLexer(ybase.NewScanner(ybase.NewReader(bytes.NewBufferString(tc.input), nil), tc.scan))
 			got := []ybase.Token{}
 
-			for s.Lex(func(tok ybase.Token) { got = append(got, tok) }) {
+			for s.DoLex(func(tok ybase.Token) { got = append(got, tok) }) != ybase.EOF {
 			}
 			if err := s.Err(); err != nil {
 				t.Fatal(err)

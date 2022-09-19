@@ -163,25 +163,25 @@ func (s *scanner) Error(msg string) { s.Errorf(msg) }
 // Lexer is an utility to implement yyLexer.
 //
 // Recommendation:
-// - Set level to yyDebug (YYDEBUG in yacc) by this function.
+// - Set level to yyDebug (YYDEBUG in yacc).
 // - Set yyErrorVerbose to true (YYERROR_VERBOSE in yacc)
 //
-// Implements yyLexer by Scanner.Error(string) and Lex() int, e.g.
+// Implements yyLexer by Error(string) and Lex(*yySymType) int, e.g.
 //
 //   type ActualLexer struct {
 //     Lexer
 //   }
 //
 //   func (a *ActualLexer) Lex(lval *yySymType) int {
-//     a.Lex(func(tok Token) {
+//     return a.DoLex(func(tok Token) {
 //       lval.token = tok  // declares in %union
 //     })
 //   }
 type Lexer interface {
 	Scanner
-	// Lex runs the lexical analysis.
-	// Returns false if EOF or an error occurs.
-	Lex(callback func(Token)) bool
+	// DoLex runs the lexical analysis.
+	// Returns EOF if EOF or an error occurs.
+	DoLex(callback func(Token)) int
 }
 
 type lexer struct {
@@ -194,18 +194,18 @@ func NewLexer(scanner Scanner) Lexer {
 	}
 }
 
-func (l *lexer) Lex(callback func(Token)) bool {
+func (l *lexer) DoLex(callback func(Token)) int {
 	if l.Err() != nil {
-		return false
+		return EOF
 	}
 	t := l.Scan()
 	if t == EOF || l.Err() != nil {
-		return false
+		return EOF
 	}
 	v := l.Buffer()
 	tok := NewToken(t, v)
 	callback(tok)
 	l.Debugf("[Lex] %s", tok)
 	l.ResetBuffer()
-	return true
+	return tok.Type()
 }

@@ -35,7 +35,7 @@ func ExampleLexer() {
 		}
 		return ybase.EOF
 	}))
-	for s.Lex(func(tok ybase.Token) { fmt.Printf("%d %s\n", tok.Type(), tok.Value()) }) {
+	for s.DoLex(func(tok ybase.Token) { fmt.Printf("%d %s\n", tok.Type(), tok.Value()) }) != ybase.EOF {
 	}
 	if err := s.Err(); err != nil {
 		panic(err)
