@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-    input := "1 + 12 - (34-56)"
+	input := "1 + 12 - (34-56)"
 	s := ybase.NewLexer(ybase.NewScanner(ybase.NewReader(bytes.NewBufferString(input), nil), func(r ybase.Reader) int {
 		r.DiscardWhile(unicode.IsSpace)
 		top := r.Peek()
