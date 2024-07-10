@@ -37,6 +37,8 @@ type Reader interface {
 	DiscardWhile(pred func(rune) bool)
 	// NextWhile calls Next() while pred(Peek()).
 	NextWhile(pred func(rune) bool)
+	// Pos returns the current position.
+	Pos() Pos
 }
 
 type reader struct {
@@ -62,6 +64,7 @@ func NewReader(rdr io.Reader, debugFunc DebugFunc) Reader {
 	return NewReaderWithInitPos(rdr, debugFunc, NewPos(1, 0, 0))
 }
 
+func (r *reader) Pos() Pos          { return r.pos }
 func (r *reader) ResetBuffer()      { r.buf.Reset() }
 func (r *reader) Buffer() string    { return r.buf.String() }
 func (r *reader) Err() error        { return r.err }
@@ -168,15 +171,15 @@ func (s *scanner) Error(msg string) { s.Errorf(msg) }
 //
 // Implements yyLexer by Error(string) and Lex(*yySymType) int, e.g.
 //
-//   type ActualLexer struct {
-//     Lexer
-//   }
+//	type ActualLexer struct {
+//	  Lexer
+//	}
 //
-//   func (a *ActualLexer) Lex(lval *yySymType) int {
-//     return a.DoLex(func(tok Token) {
-//       lval.token = tok  // declares in %union
-//     })
-//   }
+//	func (a *ActualLexer) Lex(lval *yySymType) int {
+//	  return a.DoLex(func(tok Token) {
+//	    lval.token = tok  // declares in %union
+//	  })
+//	}
 type Lexer interface {
 	Scanner
 	// DoLex runs the lexical analysis.
