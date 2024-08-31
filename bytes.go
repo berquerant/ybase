@@ -40,3 +40,46 @@ func (b Bytes) Offset(line, column int) (int, bool) {
 	offset += len([]byte(lineRow[:column]))
 	return offset, true
 }
+
+type ContextLine struct {
+	Linum int
+	Line  []byte
+}
+
+type Context struct {
+	Target *ContextLine
+	Lines  []*ContextLine
+}
+
+// Context retrieves lines before and after a specified line number.
+//
+// It returns the surrounding context, including the given number
+// of lines before and after the specified line.
+func (b Bytes) Context(line, count int) (*Context, bool) {
+	if line < 1 || count < 0 {
+		return nil, false
+	}
+	xs := bytes.Split(b, []byte("\n"))
+	if line-1 >= len(xs) {
+		return nil, false
+	}
+
+	target := &ContextLine{
+		Linum: line,
+		Line:  xs[line-1],
+	}
+	lines := []*ContextLine{}
+	for linum := line - count; linum <= line+count; linum++ {
+		index := linum - 1
+		if 0 <= index && index < len(xs) {
+			lines = append(lines, &ContextLine{
+				Linum: linum,
+				Line:  xs[index],
+			})
+		}
+	}
+	return &Context{
+		Target: target,
+		Lines:  lines,
+	}, true
+}

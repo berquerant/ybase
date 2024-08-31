@@ -17,6 +17,136 @@ spec:
   text2: text`
 	b := ybase.Bytes(document)
 
+	t.Run("Context", func(t *testing.T) {
+		for _, tc := range []struct {
+			title string
+			linum int
+			count int
+			want  *ybase.Context
+			notOK bool
+		}{
+			{
+				title: "line 7 count 1",
+				linum: 7,
+				count: 1,
+				want: &ybase.Context{
+					Target: &ybase.ContextLine{
+						Linum: 7,
+						Line:  []byte(`  text2: text`),
+					},
+					Lines: []*ybase.ContextLine{
+						{
+							Linum: 6,
+							Line:  []byte(`  text1: テキスト`),
+						},
+						{
+							Linum: 7,
+							Line:  []byte(`  text2: text`),
+						},
+					},
+				},
+			},
+			{
+				title: "line 3 count 2",
+				linum: 3,
+				count: 2,
+				want: &ybase.Context{
+					Target: &ybase.ContextLine{
+						Linum: 3,
+						Line:  []byte(`metadata:`),
+					},
+					Lines: []*ybase.ContextLine{
+						{
+							Linum: 1,
+							Line:  []byte(`apiVersion: v1`),
+						},
+						{
+							Linum: 2,
+							Line:  []byte(`kind: Text`),
+						},
+						{
+							Linum: 3,
+							Line:  []byte(`metadata:`),
+						},
+						{
+							Linum: 4,
+							Line:  []byte(`  name: sometext`),
+						},
+						{
+							Linum: 5,
+							Line:  []byte(`spec:`),
+						},
+					},
+				},
+			},
+			{
+				title: "line 1 count 1",
+				linum: 1,
+				count: 1,
+				want: &ybase.Context{
+					Target: &ybase.ContextLine{
+						Linum: 1,
+						Line:  []byte(`apiVersion: v1`),
+					},
+					Lines: []*ybase.ContextLine{
+						{
+							Linum: 1,
+							Line:  []byte(`apiVersion: v1`),
+						},
+						{
+							Linum: 2,
+							Line:  []byte(`kind: Text`),
+						},
+					},
+				},
+			},
+			{
+				title: "line 1 only",
+				linum: 1,
+				count: 0,
+				want: &ybase.Context{
+					Target: &ybase.ContextLine{
+						Linum: 1,
+						Line:  []byte(`apiVersion: v1`),
+					},
+					Lines: []*ybase.ContextLine{
+						{
+							Linum: 1,
+							Line:  []byte(`apiVersion: v1`),
+						},
+					},
+				},
+			},
+			{
+				title: "negative count",
+				linum: 1,
+				count: -1,
+				notOK: true,
+			},
+			{
+				title: "out of bounds linum",
+				linum: 8,
+				count: 1,
+				notOK: true,
+			},
+			{
+				title: "not natural linum",
+				linum: 0,
+				count: 1,
+				notOK: true,
+			},
+		} {
+			t.Run(tc.title, func(t *testing.T) {
+				got, ok := b.Context(tc.linum, tc.count)
+				assert.Equal(t, !tc.notOK, ok)
+				if tc.notOK {
+					return
+				}
+				assert.Equal(t, tc.want, got)
+			})
+		}
+	})
+
 	t.Run("LineColumn", func(t *testing.T) {
 		for _, tc := range []struct {
 			title  string
