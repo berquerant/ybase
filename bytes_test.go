@@ -17,6 +17,114 @@ spec:
   text2: text`
 	b := ybase.Bytes(document)
 
+	t.Run("Adjacency", func(t *testing.T) {
+		for _, tc := range []struct {
+			title  string
+			line   int
+			column int
+			count  int
+			want   *ybase.Adjacency
+			notOK  bool
+		}{
+			{
+				title:  "right limited",
+				line:   2,
+				column: 8,
+				count:  3,
+				want: &ybase.Adjacency{
+					Linum:  2,
+					Column: 8,
+					Focus:  'e',
+					String: ": Text",
+					Line:   "kind: Text",
+				},
+			},
+			{
+				title:  "left limited",
+				line:   2,
+				column: 2,
+				count:  3,
+				want: &ybase.Adjacency{
+					Linum:  2,
+					Column: 2,
+					Focus:  'i',
+					String: "kind:",
+					Line:   "kind: Text",
+				},
+			},
+			{
+				title:  "count 3",
+				line:   2,
+				column: 5,
+				count:  3,
+				want: &ybase.Adjacency{
+					Linum:  2,
+					Column: 5,
+					Focus:  ':',
+					String: "ind: Te",
+					Line:   "kind: Text",
+				},
+			},
+			{
+				title:  "count 0",
+				line:   1,
+				column: 2,
+				count:  0,
+				want: &ybase.Adjacency{
+					Linum:  1,
+					Column: 2,
+					Focus:  'p',
+					String: "p",
+					Line:   "apiVersion: v1",
+				},
+			},
+			{
+				title:  "column out of bounds",
+				line:   1,
+				column: 100,
+				count:  1,
+				notOK:  true,
+			},
+			{
+				title:  "line out of bounds",
+				line:   10,
+				column: 1,
+				count:  1,
+				notOK:  true,
+			},
+			{
+				title:  "count -1",
+				line:   1,
+				column: 1,
+				count:  -1,
+				notOK:  true,
+			},
+			{
+				title:  "column 0",
+				line:   1,
+				column: 0,
+				count:  1,
+				notOK:  true,
+			},
+			{
+				title:  "line 0",
+				line:   0,
+				column: 1,
+				count:  1,
+				notOK:  true,
+			},
+		} {
+			t.Run(tc.title, func(t *testing.T) {
+				got, ok := b.Adjacency(tc.line, tc.column, tc.count)
+				assert.Equal(t, !tc.notOK, ok)
+				if tc.notOK {
+					return
+				}
+				assert.Equal(t, tc.want, got)
+			})
+		}
+	})
+
 	t.Run("Context", func(t *testing.T) {
 		for _, tc := range []struct {
 			title string

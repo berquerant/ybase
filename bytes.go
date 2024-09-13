@@ -83,3 +83,44 @@ func (b Bytes) Context(line, count int) (*Context, bool) {
 		Lines:  lines,
 	}, true
 }
+
+type Adjacency struct {
+	Linum  int
+	Column int
+	Focus  rune
+	String string
+	Line   string
+}
+
+// Adjacency retrieves runes before and after a specified line and column.
+func (b Bytes) Adjacency(line, column, count int) (*Adjacency, bool) {
+	if line < 1 || column < 1 || count < 0 {
+		return nil, false
+	}
+	xs := bytes.Split(b, []byte("\n"))
+	if line-1 >= len(xs) {
+		return nil, false
+	}
+	target := bytes.Runes(xs[line-1])
+	if column-1 >= len(target) {
+		return nil, false
+	}
+	focus := target[column-1]
+
+	start := column - 1 - count
+	if start < 0 {
+		start = 0
+	}
+	end := column + count
+	if end >= len(target) {
+		end = len(target)
+	}
+	targetString := string(target[start:end])
+	return &Adjacency{
+		Linum:  line,
+		Column: column,
+		Focus:  focus,
+		String: targetString,
+		Line:   string(target),
+	}, true
+}
