@@ -11,6 +11,8 @@ import (
 
 const EOF = -1
 
+var ErrYbase = errors.New("Ybase")
+
 // DebugFunc outputs debug logs.
 // Assuming a function like slog.Debug.
 type DebugFunc func(msg string, v ...any)
@@ -84,7 +86,7 @@ func (r *reader) Debugf(msg string, v ...any) {
 	r.debugFunc("ybase: "+msg, attrs...)
 }
 func (r *reader) Errorf(err error, msg string, v ...any) {
-	r.err = fmt.Errorf("%w: %s", err, msg)
+	r.err = errors.Join(ErrYbase, fmt.Errorf("%w: %s", err, msg))
 	attrs := r.logAttrs()
 	attrs = append(attrs, v...)
 	attrs = append(attrs, slog.Any("err", r.err))
@@ -174,8 +176,10 @@ func NewScanner(rdr Reader, scanFunc ScanFunc) Scanner {
 	}
 }
 
-func (s *scanner) Scan() int        { return s.scanFunc(s.Reader) }
-func (s *scanner) Error(msg string) { s.Errorf(errors.New(msg), msg) }
+func (s *scanner) Scan() int { return s.scanFunc(s.Reader) }
+func (s *scanner) Error(msg string) {
+	s.Errorf(fmt.Errorf("%w: %s", ErrYbase, msg), msg)
+}
 
 // Lexer is an utility to implement yyLexer.
 //
