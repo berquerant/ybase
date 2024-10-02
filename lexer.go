@@ -68,11 +68,11 @@ func NewReader(rdr io.Reader, debugFunc DebugFunc) Reader {
 	return NewReaderWithInitPos(rdr, debugFunc, NewPos(1, 0, 0))
 }
 
-func (r *reader) Pos() Pos       { return r.pos }
-func (r *reader) ResetBuffer()   { r.buf.Reset() }
-func (r *reader) Buffer() string { return r.buf.String() }
-func (r *reader) Err() error     { return r.err }
-func (r *reader) logAttrs() []any {
+func (r reader) Pos() Pos       { return r.pos }
+func (r *reader) ResetBuffer()  { r.buf.Reset() }
+func (r reader) Buffer() string { return r.buf.String() }
+func (r reader) Err() error     { return r.err }
+func (r reader) logAttrs() []any {
 	return []any{
 		slog.Int("line", r.pos.Line()),
 		slog.Int("column", r.pos.Column()),
@@ -80,12 +80,12 @@ func (r *reader) logAttrs() []any {
 		slog.String("buf", r.buf.String()),
 	}
 }
-func (r *reader) Debugf(msg string, v ...any) {
+func (r reader) Debugf(msg string, v ...any) {
 	attrs := r.logAttrs()
 	attrs = append(attrs, v...)
 	r.debugFunc("ybase: "+msg, attrs...)
 }
-func (r *reader) Errorf(err error, msg string, v ...any) {
+func (r reader) Errorf(err error, msg string, v ...any) {
 	r.err = errors.Join(ErrYbase, fmt.Errorf("%w: %s", err, msg))
 	attrs := r.logAttrs()
 	attrs = append(attrs, v...)
@@ -177,7 +177,7 @@ func NewScanner(rdr Reader, scanFunc ScanFunc) Scanner {
 }
 
 func (s *scanner) Scan() int { return s.scanFunc(s.Reader) }
-func (s *scanner) Error(msg string) {
+func (s scanner) Error(msg string) {
 	s.Errorf(fmt.Errorf("%w: %s", ErrYbase, msg), msg)
 }
 

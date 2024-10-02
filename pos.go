@@ -23,10 +23,10 @@ func NewPos(line, col, offset int) Pos {
 	}
 }
 
-func (s *pos) Line() int      { return s.line }
-func (s *pos) Column() int    { return s.col }
-func (s *pos) Offset() int    { return s.offset }
-func (s *pos) String() string { return fmt.Sprintf("%d,%d,%d", s.line, s.col, s.offset) }
+func (s pos) Line() int      { return s.line }
+func (s pos) Column() int    { return s.col }
+func (s pos) Offset() int    { return s.offset }
+func (s pos) String() string { return fmt.Sprintf("%d,%d,%d", s.line, s.col, s.offset) }
 func (s *pos) Add(r rune) Pos {
 	size := len([]byte(string(r)))
 	if r == '\n' {
