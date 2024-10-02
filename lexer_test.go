@@ -2,6 +2,7 @@ package ybase_test
 
 import (
 	"bytes"
+	"log/slog"
 	"strings"
 	"testing"
 	"unicode"
@@ -11,7 +12,7 @@ import (
 )
 
 func newReader(input string) ybase.Reader {
-	return ybase.NewReader(bytes.NewBufferString(input), nil)
+	return ybase.NewReader(bytes.NewBufferString(input), slog.Info)
 }
 
 func TestReader(t *testing.T) {
@@ -150,7 +151,7 @@ func TestLexer(t *testing.T) {
 	} {
 		tc := tc
 		t.Run(tc.title, func(t *testing.T) {
-			s := ybase.NewLexer(ybase.NewScanner(ybase.NewReader(bytes.NewBufferString(tc.input), nil), tc.scan))
+			s := ybase.NewLexer(ybase.NewScanner(ybase.NewReader(bytes.NewBufferString(tc.input), slog.Info), tc.scan))
 			got := []ybase.Token{}
 
 			for s.DoLex(func(tok ybase.Token) { got = append(got, tok) }) != ybase.EOF {

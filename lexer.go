@@ -6,14 +6,16 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 )
 
 const EOF = -1
 
-// Debugf outputs debug logs.
-type DebugFunc func(format string, v ...any)
+// DebugFunc outputs debug logs.
+// Assuming a function like slog.Debug.
+type DebugFunc func(msg string, v ...any)
 
-func NilDebugFunc(format string, v ...any) {}
+func NilDebugFunc(msg string, v ...any) {}
 
 // Reader represents a reader object for lex.
 type Reader interface {
@@ -30,9 +32,9 @@ type Reader interface {
 	// Err returns an error during the reading.
 	Err() error
 	// Debugf outputs debug logs.
-	Debugf(format string, v ...any)
+	Debugf(msg string, v ...any)
 	// Errorf outputs logs and set an error.
-	Errorf(format string, v ...any)
+	Errorf(err error, msg string, v ...any)
 	// DiscardWhile calls Discard() while pred(Peek()).
 	DiscardWhile(pred func(rune) bool)
 	// NextWhile calls Next() while pred(Peek()).
@@ -64,17 +66,29 @@ func NewReader(rdr io.Reader, debugFunc DebugFunc) Reader {
 	return NewReaderWithInitPos(rdr, debugFunc, NewPos(1, 0, 0))
 }
 
-func (r *reader) Pos() Pos          { return r.pos }
-func (r *reader) ResetBuffer()      { r.buf.Reset() }
-func (r *reader) Buffer() string    { return r.buf.String() }
-func (r *reader) Err() error        { return r.err }
-func (r *reader) logHeader() string { return fmt.Sprintf("[ybase][%s][%s]", r.pos, r.buf.String()) }
-func (r *reader) Debugf(format string, v ...any) {
-	r.debugFunc("%s %s", r.logHeader(), fmt.Sprintf(format, v...))
+func (r *reader) Pos() Pos       { return r.pos }
+func (r *reader) ResetBuffer()   { r.buf.Reset() }
+func (r *reader) Buffer() string { return r.buf.String() }
+func (r *reader) Err() error     { return r.err }
+func (r *reader) logAttrs() []any {
+	return []any{
+		slog.Int("line", r.pos.Line()),
+		slog.Int("column", r.pos.Column()),
+		slog.Int("offset", r.pos.Offset()),
+		slog.String("buf", r.buf.String()),
+	}
 }
-func (r *reader) Errorf(format string, v ...any) {
-	r.err = fmt.Errorf("%s %w", r.logHeader(), fmt.Errorf(format, v...))
-	r.Debugf("[ybase] error %v", r.err)
+func (r *reader) Debugf(msg string, v ...any) {
+	attrs := r.logAttrs()
+	attrs = append(attrs, v...)
+	r.debugFunc("ybase: "+msg, attrs...)
+}
+func (r *reader) Errorf(err error, msg string, v ...any) {
+	r.err = fmt.Errorf("%w: %s", err, msg)
+	attrs := r.logAttrs()
+	attrs = append(attrs, v...)
+	attrs = append(attrs, slog.Any("err", r.err))
+	r.debugFunc("ybase: "+msg, attrs...)
 }
 
 func (r *reader) DiscardWhile(pred func(rune) bool) {
@@ -91,10 +105,10 @@ func (r *reader) NextWhile(pred func(rune) bool) {
 
 func (r *reader) Discard() rune {
 	g, _, err := r.rdr.ReadRune()
-	r.Debugf("[Discard] %q %v", g, err)
+	r.Debugf("Discard", slog.Any("rune", g), slog.Any("err", err))
 	if err != nil {
 		if !errors.Is(err, io.EOF) {
-			r.Errorf("[Discard] from reader %w", err)
+			r.Errorf(err, "Discard from reader")
 		}
 		return EOF
 	}
@@ -104,15 +118,15 @@ func (r *reader) Discard() rune {
 
 func (r *reader) Peek() rune {
 	g, _, err := r.rdr.ReadRune()
-	r.Debugf("[Peek] %q %v", g, err)
+	r.Debugf("Peek", slog.Any("rune", g), slog.Any("err", err))
 	if err != nil {
 		if !errors.Is(err, io.EOF) {
-			r.Errorf("[Peek] from reader %w", err)
+			r.Errorf(err, "Peek from reader")
 		}
 		return EOF
 	}
 	if err := r.rdr.UnreadRune(); err != nil {
-		r.Errorf("[Peek] failed to unread %w", err)
+		r.Errorf(err, "Peek failed to unread")
 		return EOF
 	}
 	return g
@@ -120,17 +134,17 @@ func (r *reader) Peek() rune {
 
 func (r *reader) Next() rune {
 	g, _, err := r.rdr.ReadRune()
-	r.Debugf("[Next] %q %v", g, err)
+	r.Debugf("Next", slog.Any("rune", g), slog.Any("err", err))
 	if err != nil {
 		if !errors.Is(err, io.EOF) {
-			r.Errorf("[Next] from reader %w", err)
+			r.Errorf(err, "Next from reader")
 		}
 		return EOF
 	}
 
 	r.pos = r.pos.Add(g)
 	if _, err := r.buf.WriteRune(g); err != nil {
-		r.Errorf("[Next] failed to write buffer %w", err)
+		r.Errorf(err, "Next failed to write buffer")
 		return EOF
 	}
 	return g
@@ -161,7 +175,7 @@ func NewScanner(rdr Reader, scanFunc ScanFunc) Scanner {
 }
 
 func (s *scanner) Scan() int        { return s.scanFunc(s.Reader) }
-func (s *scanner) Error(msg string) { s.Errorf(msg) }
+func (s *scanner) Error(msg string) { s.Errorf(errors.New(msg), msg) }
 
 // Lexer is an utility to implement yyLexer.
 //
@@ -208,7 +222,7 @@ func (l *lexer) DoLex(callback func(Token)) int {
 	v := l.Buffer()
 	tok := NewToken(t, v)
 	callback(tok)
-	l.Debugf("[Lex] %s", tok)
+	l.Debugf("Lex", slog.Int("type", tok.Type()), slog.String("value", tok.Value()))
 	l.ResetBuffer()
 	return tok.Type()
 }
