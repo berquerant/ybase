@@ -59,7 +59,7 @@ func newTokens(v ...any) []ybase.Token {
 		t := v[i].(int)
 		i++
 		val := v[i].(string)
-		toks = append(toks, ybase.NewToken(t, val))
+		toks = append(toks, ybase.NewToken(t, val, nil, nil))
 	}
 	return toks
 }

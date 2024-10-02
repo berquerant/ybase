@@ -207,11 +207,13 @@ type Lexer interface {
 
 type lexer struct {
 	Scanner
+	pos Pos
 }
 
 func NewLexer(scanner Scanner) Lexer {
 	return &lexer{
 		Scanner: scanner,
+		pos:     scanner.Pos(),
 	}
 }
 
@@ -219,14 +221,26 @@ func (l *lexer) DoLex(callback func(Token)) int {
 	if l.Err() != nil {
 		return EOF
 	}
+	start := l.pos
 	t := l.Scan()
 	if t == EOF || l.Err() != nil {
 		return EOF
 	}
+	end := l.Pos()
+	l.pos = end
 	v := l.Buffer()
-	tok := NewToken(t, v)
+	tok := NewToken(t, v, start, end)
 	callback(tok)
-	l.Debugf("Lex", slog.Int("type", tok.Type()), slog.String("value", tok.Value()))
+	l.Debugf("Lex",
+		slog.Int("type", tok.Type()),
+		slog.String("value", tok.Value()),
+		slog.Int("start.line", tok.Start().Line()),
+		slog.Int("start.column", tok.Start().Column()),
+		slog.Int("start.offset", tok.Start().Offset()),
+		slog.Int("end.line", tok.End().Line()),
+		slog.Int("end.column", tok.End().Column()),
+		slog.Int("end.offset", tok.End().Offset()),
+	)
 	l.ResetBuffer()
 	return tok.Type()
 }
