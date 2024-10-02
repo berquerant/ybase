@@ -39,5 +39,7 @@ func (s *token) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]any{
 		"type":  s.t,
 		"value": s.v,
+		"start": s.start,
+		"end":   s.end,
 	})
 }
