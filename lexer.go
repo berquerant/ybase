@@ -85,7 +85,7 @@ func (r reader) Debugf(msg string, v ...any) {
 	attrs = append(attrs, v...)
 	r.debugFunc("ybase: "+msg, attrs...)
 }
-func (r reader) Errorf(err error, msg string, v ...any) {
+func (r *reader) Errorf(err error, msg string, v ...any) {
 	r.err = errors.Join(ErrYbase, fmt.Errorf("%w: %s", err, msg))
 	attrs := r.logAttrs()
 	attrs = append(attrs, v...)
@@ -177,7 +177,7 @@ func NewScanner(rdr Reader, scanFunc ScanFunc) Scanner {
 }
 
 func (s *scanner) Scan() int { return s.scanFunc(s.Reader) }
-func (s scanner) Error(msg string) {
+func (s *scanner) Error(msg string) {
 	s.Errorf(fmt.Errorf("%w: %s", ErrYbase, msg), msg)
 }
 
