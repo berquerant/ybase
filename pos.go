@@ -1,6 +1,9 @@
 package ybase
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type (
 	Pos interface {
@@ -41,4 +44,11 @@ func (s *pos) Add(r rune) Pos {
 		col:    s.col + 1,
 		offset: s.offset + size,
 	}
+}
+func (s pos) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"line":   s.line,
+		"col":    s.col,
+		"offset": s.offset,
+	})
 }
