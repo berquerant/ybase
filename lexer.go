@@ -107,7 +107,7 @@ func (r *reader) NextWhile(pred func(rune) bool) {
 
 func (r *reader) Discard() rune {
 	g, _, err := r.rdr.ReadRune()
-	r.Debugf("Discard", slog.Any("rune", g), slog.Any("err", err))
+	r.Debugf("Discard", slog.String("rune", string(g)), slog.Any("err", err))
 	if err != nil {
 		if !errors.Is(err, io.EOF) {
 			r.Errorf(err, "Discard from reader")
@@ -120,7 +120,7 @@ func (r *reader) Discard() rune {
 
 func (r *reader) Peek() rune {
 	g, _, err := r.rdr.ReadRune()
-	r.Debugf("Peek", slog.Any("rune", g), slog.Any("err", err))
+	r.Debugf("Peek", slog.String("rune", string(g)), slog.Any("err", err))
 	if err != nil {
 		if !errors.Is(err, io.EOF) {
 			r.Errorf(err, "Peek from reader")
@@ -136,7 +136,7 @@ func (r *reader) Peek() rune {
 
 func (r *reader) Next() rune {
 	g, _, err := r.rdr.ReadRune()
-	r.Debugf("Next", slog.Any("rune", g), slog.Any("err", err))
+	r.Debugf("Next", slog.String("rune", string(g)), slog.Any("err", err))
 	if err != nil {
 		if !errors.Is(err, io.EOF) {
 			r.Errorf(err, "Next from reader")
