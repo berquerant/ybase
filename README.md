@@ -1,3 +1,6 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/berquerant/ybase)](https://goreportcard.com/report/github.com/berquerant/ybase)
+[![Go Reference](https://pkg.go.dev/badge/github.com/berquerant/ybase.svg)](https://pkg.go.dev/github.com/berquerant/ybase)
+
 # ybase
 
 Utilities to implement a lexer for goyacc.
