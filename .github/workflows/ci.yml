@@ -1,4 +1,5 @@
 name: CI
+permissions: {}
 
 on:
   push:
@@ -9,6 +10,8 @@ on:
       - main
 
 jobs:
+  permissions:
+    contents: read
   build:
     runs-on: ubuntu-latest
     steps:
