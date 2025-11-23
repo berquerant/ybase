@@ -5,11 +5,15 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     ignore: # ignore major update
       - dependency-name: "*"
         update-types: [ "version-update:semver-major" ]
