@@ -107,14 +107,8 @@ func (b Bytes) Adjacency(line, column, count int) (*Adjacency, bool) {
 	}
 	focus := target[column-1]
 
-	start := column - 1 - count
-	if start < 0 {
-		start = 0
-	}
-	end := column + count
-	if end >= len(target) {
-		end = len(target)
-	}
+	start := max(column-1-count, 0)
+	end := min(column+count, len(target))
 	targetString := string(target[start:end])
 	return &Adjacency{
 		Linum:  line,
