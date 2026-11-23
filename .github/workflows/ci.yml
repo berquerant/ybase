@@ -1,4 +1,5 @@
 name: CI
+
 permissions: {}
 
 on:
@@ -9,20 +10,19 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
-  build:
-    timeout-minutes: 5
+  actions-lock-verify:
     permissions:
-      contents: read
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7.0.1
-        with:
-          persist-credentials: false
-      - name: Setup Go
-        uses: actions/setup-go@v7.0.0
-        with:
-          go-version-file: go.mod
-          cache-dependency-path: go.sum
-      - name: Test
-        run: make test
+      contents: read # checkout repository to verify actions.lock
+    uses: berquerant/reusable-workflows/.github/workflows/actions-lock-verify.yml@v0.6.0
+
+  ci:
+    permissions:
+      contents: read # checkout repository for Go CI
+    uses: berquerant/reusable-workflows/.github/workflows/go-ci.yml@v0.6.0
+    with:
+      test-command: make test
